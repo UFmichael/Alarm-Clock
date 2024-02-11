@@ -2,12 +2,33 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { textStyles, styles } from '../styles/styles';
+import { Audio } from 'expo-av';
 
 function AlarmClock() {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
   const [alarmTime, setAlarmTime] = useState(null);
   const [isAlarmSet, setIsAlarmSet] = useState(false);
   const [countdown, setCountdown] = useState('');
+
+  async function playSound() {
+    console.log('Loading Sound');
+    const { sound } = Audio.Sound.createAsync('alarm.mp3');
+    setSound(sound);
+
+    await sound.playAsync();
+
+    sound.unloadAsync();
+  }
+
+  Audio.setAudioModeAsync({
+    allowsRecordingIOS: false,
+    playsInSilentModeIOS: true,
+    shouldDuckAndroid: true,
+    staysActiveInBackground: true,
+    playsThroughEarpieceAndroid: true
+  })
+  
 
   const showDatePicker = () => {
     setDatePickerVisibility(true);
@@ -17,15 +38,26 @@ function AlarmClock() {
     setDatePickerVisibility(false);
   };
 
+  const showTimePicker = () => {
+    setTimePickerVisibility(true);
+  };
+
+  const hideTimePicker = () => {
+    setTimePickerVisibility(false);
+  };
+
   const handleConfirm = (date) => {
     setAlarmTime(date);
     setIsAlarmSet(true);
 
-    // Set a timeout to trigger the alarm
+    // Set a timeout to trigger the alarme
     const currentTime = new Date();
     const timeUntilAlarm = date - currentTime;
     setTimeout(() => {
       alert('Wake up!');
+      
+      playSound();
+      
       setIsAlarmSet(false);
       setCountdown('');
     }, timeUntilAlarm);
@@ -53,15 +85,25 @@ function AlarmClock() {
       <Text>Alarm Status: {isAlarmSet ? 'Set' : 'Not Set'}</Text>
       {isAlarmSet && <Text>Time Left: {countdown}</Text>}
       <TouchableOpacity onPress={showDatePicker} style={styles.button}>
+        <Text style={textStyles.buttonText}>Set Alarm Date</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={showTimePicker} style={styles.button}>
         <Text style={textStyles.buttonText}>Set Alarm Time</Text>
       </TouchableOpacity>
 
       <DateTimePickerModal
         textColor="black"
         isVisible={isDatePickerVisible}
-        mode="time"
+        mode="date"
         onConfirm={handleConfirm}
         onCancel={hideDatePicker}
+      />
+      <DateTimePickerModal
+        textColor="black"
+        isVisible={isTimePickerVisible}
+        mode="time"
+        onConfirm={handleConfirm}
+        onCancel={hideTimePicker}
       />
     </View>
   );
